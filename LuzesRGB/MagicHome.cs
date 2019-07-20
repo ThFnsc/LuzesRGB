@@ -70,7 +70,7 @@ namespace LuzesRGB {
         }
 
         public void SetColor(Color color) {
-            SendCommand(new byte[] { 0x31, color.R, color.G, color.B, 0x00, 0xf0, 0x0f });
+            SendCommand(new byte[] { 0x31, color.R, color.G, color.B, 0x00, 0x01, 0x01 });
         }
 
         public void SendCommand(byte[] msg, Action<byte[], int> reponse) {
@@ -91,6 +91,10 @@ namespace LuzesRGB {
             Buffer.SetByte(msgWCS, msg.Length, (byte)checksum);
             try {
                 nwStream.Write(msgWCS, 0, msgWCS.Length);
+                StringBuilder sb = new StringBuilder(msgWCS.Length * 2);
+                foreach (byte b in msgWCS)
+                    sb.AppendFormat("{0:x2}", b);
+                Console.WriteLine(sb.ToString());
             } catch (Exception) {
                 IsConnected = false;
                 OnConnectionLost?.Invoke(this, null);

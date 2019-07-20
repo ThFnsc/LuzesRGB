@@ -16,7 +16,7 @@ namespace LuzesRGB {
     public partial class MainForm : Form {
         [DllImport("shlwapi.dll")]
         public static extern int ColorHLSToRGB(int H, int L, int S);
-
+        public byte ChannelLimit { get { return Properties.Settings.Default.ChannelLimit; } set { Properties.Settings.Default.ChannelLimit = value; Properties.Settings.Default.Save(); }}
         private bool forceClose = false;
         private bool boot = false;
 
@@ -24,10 +24,11 @@ namespace LuzesRGB {
         WasapiLoopbackCapture audio;
         BufferedWaveProvider bwp;
         Color lastColorSent;
+        int lastColorCount = 0;
 
         bool doGraphUpdate = true;
 
-        float[,] history = new float[3, 100];
+        float[,] history = new float[3, 750];
         short histPos = 0;
 
         double hue = 0;
@@ -40,8 +41,8 @@ namespace LuzesRGB {
                 if (arg == "-boot") boot = true;
             InitializeComponent();
             cbStartInvisible.Checked = Properties.Settings.Default.StartInvisible;
-            MainForm_VisibleChanged(null, null);
             rgbView.ValueChanged += RgbView_ValueChanged;
+            tLimit.Value = ChannelLimit;
             Task.Run(() => {
                 audio = new WasapiLoopbackCapture();
                 bwp = new BufferedWaveProvider(audio.WaveFormat) { DiscardOnBufferOverflow = true, BufferLength = BUFFER_SIZE * 2 };
@@ -64,10 +65,9 @@ namespace LuzesRGB {
         }
 
         private void SetRGBStrip(Color color, bool callback = false) {
-            if (color != lastColorSent) {
-                strip.SetColor(color);
-                lastColorSent = color;
-            }
+            lastColorCount = color == lastColorSent ? lastColorCount + 1 : 0;
+            if (lastColorCount < 5)
+                strip.SetColor(lastColorSent = color);
             if (!callback && this.Visible && this.WindowState != FormWindowState.Minimized)
                 rgbView.Value = color;
         }
@@ -78,8 +78,7 @@ namespace LuzesRGB {
                     updater.Enabled = false;
                     break;
                 case 1:
-                    SetRGBStrip(new HSLColor(hue, 255.0, 128.0));
-                    hue += 1;
+                    SetRGBStrip(new HSLColor(hue++, 255.0, 128.0));
                     if (hue >= 256) hue = 0;
                     break;
                 case 2:
@@ -109,12 +108,12 @@ namespace LuzesRGB {
 
                         float[] freqs = LowsMidsHighs(joinedSamples);
                         for (int i = 0; i < freqs.Length; i++)
-                            history[i, histPos] = freqs[i];
-                        histPos++;
+                            history[i, histPos++] = freqs[i];
                         if (histPos >= history.GetLength(1)) histPos = 0;
-                        SetRGBStrip(Color.FromArgb(MapN(freqs[0], 0, MaxOf(history, 0), 0, 255),
-                        MapN(freqs[1], 0, MaxOf(history, 1), 0, 255),
-                        MapN(freqs[2], 0, MaxOf(history, 2), 0, 255)));
+                        SetRGBStrip(Color.FromArgb(
+                            MapN(freqs[0], 0, MaxOf(history, 0), 0, ChannelLimit),
+                        MapN(freqs[1], 0, MaxOf(history, 1), 0, ChannelLimit),
+                        MapN(freqs[2], 0, MaxOf(history, 2), 0, ChannelLimit)));
                     });
                     updater.Enabled = true;
                     break;
@@ -158,7 +157,8 @@ namespace LuzesRGB {
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
             if (forceClose) {
                 audio.StopRecording();
-                strip.Turn(false);
+                for (byte i = 0; i < 3; Thread.Sleep(100), i++)
+                    strip.Turn(false);
             } else {
                 e.Cancel = true;
                 this.Visible = false;
@@ -248,6 +248,10 @@ namespace LuzesRGB {
             Properties.Settings.Default.StartWithWindows = cbLaunchOnStartup.Checked;
             Properties.Settings.Default.Save();
             cbStartInvisible.Enabled = cbLaunchOnStartup.Checked;
+        }
+
+        private void tLimit_Scroll(object sender, EventArgs e) {
+            ChannelLimit = Convert.ToByte(tLimit.Value);
         }
     }
 }

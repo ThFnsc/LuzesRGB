@@ -70,5 +70,17 @@ namespace LuzesRGB.Properties {
                 this["StartWithWindows"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public byte ChannelLimit {
+            get {
+                return ((byte)(this["ChannelLimit"]));
+            }
+            set {
+                this["ChannelLimit"] = value;
+            }
+        }
     }
 }
