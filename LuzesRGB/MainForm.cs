@@ -39,6 +39,10 @@ namespace LuzesRGB {
         public MainForm(string[] progArgs) {
             foreach (var arg in progArgs)
                 if (arg == "-boot") boot = true;
+            SystemEvents.SessionEnding += (sender, args) => {
+                args.Cancel = true;
+                Shutdown();
+            };
             InitializeComponent();
             cbStartInvisible.Checked = Properties.Settings.Default.StartInvisible;
             rgbView.ValueChanged += RgbView_ValueChanged;
@@ -48,12 +52,13 @@ namespace LuzesRGB {
                 bwp = new BufferedWaveProvider(audio.WaveFormat) { DiscardOnBufferOverflow = true, BufferLength = BUFFER_SIZE * 2 };
                 audio.DataAvailable += (sndr, args) => bwp.AddSamples(args.Buffer, 0, args.BytesRecorded);
                 strip = new MagicHome() { TurnOnWhenConnected = true };
+                strip.OnConnecting += (s, ea) => tbIp.ForeColor = Color.Blue;
                 strip.OnConnect += (s, ea) => tbIp.ForeColor = Color.DarkGreen;
                 strip.OnConnectFail += (s, ea) => tbIp.ForeColor = Color.OrangeRed;
                 strip.OnConnectionLost += (s, ea) => tbIp.ForeColor = Color.DarkMagenta;
                 SafeCall(() => {
                     tbIp.Text = Properties.Settings.Default.Ip;
-                    tbIp_DoubleClick(null, null);
+                    Connect();
                     cbMode_SelectedIndexChanged(null, null);
                     updater.Enabled = true;
                 });
@@ -155,14 +160,19 @@ namespace LuzesRGB {
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
-            if (forceClose) {
-                audio.StopRecording();
-                for (byte i = 0; i < 3; Thread.Sleep(100), i++)
-                    strip.Turn(false);
-            } else {
+            if (!forceClose) {
                 e.Cancel = true;
                 this.Visible = false;
             }
+        }
+
+        private void Shutdown() {
+            if (strip != null && strip.IsConnected)
+                for (byte i = 0; i < 3; Thread.Sleep(100), i++)
+                    strip?.Turn(false);
+            if (audio.CaptureState == NAudio.CoreAudioApi.CaptureState.Capturing)
+                audio.StopRecording();
+            strip?.Dispose();
         }
 
         public float[] FFT(float[] data) {
@@ -205,7 +215,7 @@ namespace LuzesRGB {
         }
 
         private void tbIp_DoubleClick(object sender, EventArgs e) {
-            strip.SetIP(tbIp.Text);
+            Connect();
         }
 
         private void MainForm_Load(object sender, EventArgs e) {
@@ -252,6 +262,22 @@ namespace LuzesRGB {
 
         private void tLimit_Scroll(object sender, EventArgs e) {
             ChannelLimit = Convert.ToByte(tLimit.Value);
+        }
+
+        public void Connect() {
+            if (IPAddress.TryParse(tbIp.Text, out strip.Ip))
+                strip.Connect();
+            else
+                tbIp.ForeColor = Color.OrangeRed;
+        }
+
+        private void TbIp_KeyUp(object sender, KeyEventArgs e) {
+            if (e.KeyCode == Keys.Enter)
+                Connect();
+        }
+
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e) {
+            Shutdown();
         }
     }
 }

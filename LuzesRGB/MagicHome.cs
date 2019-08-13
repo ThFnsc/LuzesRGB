@@ -10,34 +10,30 @@ using System.Threading;
 using System.Net;
 
 namespace LuzesRGB {
-    class MagicHome {
+    class MagicHome : IDisposable{
         TcpClient client;
         NetworkStream nwStream;
         Task connChecker;
 
+        public event EventHandler OnConnecting;
         public event EventHandler OnConnect;
         public event EventHandler OnConnectionLost;
         public event EventHandler OnConnectFail;
 
-        public string Ip { get; set; }
+        public IPAddress Ip;
         public int Port { get; set; }
-        public bool IsConnected { get; set; }
+        public bool IsConnected { get { return client != null && client.Connected; } }
         public bool TurnOnWhenConnected { get; set; }
 
-        public MagicHome(string ip = "", int port = 5577) {
+        public MagicHome(IPAddress ip=null, int port = 5577) {
             Ip = ip;
             Port = port;
-            Connect();
             connChecker = SetInterval(() => {
-                if (!IsConnected) Connect();
+                if (!IsConnected)
+                    Connect();
             }, 2000);
         }
-
-        public bool SetIP(string ip) {
-            Ip = ip;
-            return Connect();
-        }
-
+        
         private Task SetInterval(Action action, int ms) {
             return Task.Run(() => {
                 while (true) {
@@ -47,19 +43,22 @@ namespace LuzesRGB {
             });
         }
 
-        private bool Connect() {
-            try {
-                IPAddress.Parse(Ip);
-                client = new TcpClient(Ip, Port);
-                nwStream = client.GetStream();
-                IsConnected = true;
-                if (TurnOnWhenConnected) Turn(true);
-                OnConnect?.Invoke(this, null);
-            } catch (Exception) {
-                IsConnected = false;
-                OnConnectFail?.Invoke(this, null);
-            }
-            return IsConnected;
+        public void Connect() {
+            Task.Run(() => {
+                try {
+                    if (Ip == null)
+                        return;
+                    OnConnecting?.Invoke(this,null);
+                    client?.Dispose();
+                    client = new TcpClient(Ip.ToString(), Port) { NoDelay = true };
+                    nwStream = client.GetStream();
+                    if (TurnOnWhenConnected)
+                        Turn(true);
+                    OnConnect?.Invoke(this, null);
+                } catch (Exception) {
+                    OnConnectFail?.Invoke(this, null);
+                }
+            });
         }
 
         public void Turn(bool state) {
@@ -91,18 +90,20 @@ namespace LuzesRGB {
             Buffer.SetByte(msgWCS, msg.Length, (byte)checksum);
             try {
                 nwStream.Write(msgWCS, 0, msgWCS.Length);
-                StringBuilder sb = new StringBuilder(msgWCS.Length * 2);
-                foreach (byte b in msgWCS)
-                    sb.AppendFormat("{0:x2}", b);
-                Console.WriteLine(sb.ToString());
             } catch (Exception) {
-                IsConnected = false;
                 OnConnectionLost?.Invoke(this, null);
             }
         }
 
         public void Disconnect() {
             client.Close();
+        }
+
+        public void Dispose() {
+            if (client.Connected)
+                client.Close();
+            nwStream?.Dispose();
+            client?.Dispose();
         }
     }
 }

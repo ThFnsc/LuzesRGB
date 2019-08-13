@@ -42,12 +42,12 @@ namespace LuzesRGB {
             this.tLimit = new System.Windows.Forms.TrackBar();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
+            this.rgbView = new LuzesRGB.RGBView();
             this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.trayStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.buttonRestart = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonShow = new System.Windows.Forms.ToolStripMenuItem();
             this.buttonExit = new System.Windows.Forms.ToolStripMenuItem();
-            this.rgbView = new LuzesRGB.RGBView();
             ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
             this.tableLayoutPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tLimit)).BeginInit();
@@ -64,7 +64,7 @@ namespace LuzesRGB {
             // waveViewer1
             // 
             this.waveViewer1.Location = new System.Drawing.Point(477, 124);
-            this.waveViewer1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.waveViewer1.Margin = new System.Windows.Forms.Padding(4);
             this.waveViewer1.Name = "waveViewer1";
             this.waveViewer1.SamplesPerPixel = 128;
             this.waveViewer1.Size = new System.Drawing.Size(629, 355);
@@ -81,8 +81,8 @@ namespace LuzesRGB {
             this.chart.Dock = System.Windows.Forms.DockStyle.Fill;
             legend1.Name = "Legend1";
             this.chart.Legends.Add(legend1);
-            this.chart.Location = new System.Drawing.Point(4, 113);
-            this.chart.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.chart.Location = new System.Drawing.Point(4, 194);
+            this.chart.Margin = new System.Windows.Forms.Padding(4);
             this.chart.Name = "chart";
             series1.ChartArea = "ChartArea1";
             series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.Line;
@@ -91,7 +91,7 @@ namespace LuzesRGB {
             series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Int32;
             series1.YValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Double;
             this.chart.Series.Add(series1);
-            this.chart.Size = new System.Drawing.Size(802, 339);
+            this.chart.Size = new System.Drawing.Size(802, 258);
             this.chart.TabIndex = 3;
             this.chart.Text = "chart1";
             this.chart.Click += new System.EventHandler(this.chart_Click);
@@ -106,7 +106,7 @@ namespace LuzesRGB {
             "Rainbow",
             "Music"});
             this.cbMode.Location = new System.Drawing.Point(55, 4);
-            this.cbMode.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cbMode.Margin = new System.Windows.Forms.Padding(4);
             this.cbMode.Name = "cbMode";
             this.cbMode.Size = new System.Drawing.Size(334, 24);
             this.cbMode.TabIndex = 5;
@@ -126,7 +126,7 @@ namespace LuzesRGB {
             this.tableLayoutPanel2.Controls.Add(this.tLimit, 1, 4);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(4, 4);
-            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 5;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -170,6 +170,7 @@ namespace LuzesRGB {
             this.tbIp.TabIndex = 8;
             this.tbIp.TextChanged += new System.EventHandler(this.tbIp_TextChanged);
             this.tbIp.DoubleClick += new System.EventHandler(this.tbIp_DoubleClick);
+            this.tbIp.KeyUp += new System.Windows.Forms.KeyEventHandler(this.TbIp_KeyUp);
             // 
             // cbStartInvisible
             // 
@@ -188,7 +189,7 @@ namespace LuzesRGB {
             // 
             this.cbLaunchOnStartup.AutoSize = true;
             this.cbLaunchOnStartup.Location = new System.Drawing.Point(55, 64);
-            this.cbLaunchOnStartup.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cbLaunchOnStartup.Margin = new System.Windows.Forms.Padding(4);
             this.cbLaunchOnStartup.Name = "cbLaunchOnStartup";
             this.cbLaunchOnStartup.Size = new System.Drawing.Size(145, 21);
             this.cbLaunchOnStartup.TabIndex = 10;
@@ -200,7 +201,7 @@ namespace LuzesRGB {
             // 
             this.tLimit.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tLimit.Location = new System.Drawing.Point(52, 119);
-            this.tLimit.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.tLimit.Margin = new System.Windows.Forms.Padding(1);
             this.tLimit.Maximum = 255;
             this.tLimit.Name = "tLimit";
             this.tLimit.Size = new System.Drawing.Size(340, 54);
@@ -217,7 +218,7 @@ namespace LuzesRGB {
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel3, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -236,12 +237,23 @@ namespace LuzesRGB {
             this.tableLayoutPanel3.Controls.Add(this.tableLayoutPanel2, 0, 0);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(4, 4);
-            this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(4);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             this.tableLayoutPanel3.RowCount = 1;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(802, 101);
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(802, 182);
             this.tableLayoutPanel3.TabIndex = 7;
+            // 
+            // rgbView
+            // 
+            this.rgbView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rgbView.Location = new System.Drawing.Point(405, 4);
+            this.rgbView.Margin = new System.Windows.Forms.Padding(4);
+            this.rgbView.Name = "rgbView";
+            this.rgbView.Size = new System.Drawing.Size(393, 174);
+            this.rgbView.TabIndex = 7;
+            this.rgbView.Text = "rgbView1";
+            this.rgbView.Value = System.Drawing.Color.Empty;
             // 
             // trayIcon
             // 
@@ -280,17 +292,6 @@ namespace LuzesRGB {
             this.buttonExit.Size = new System.Drawing.Size(99, 24);
             this.buttonExit.Text = "Exit";
             // 
-            // rgbView
-            // 
-            this.rgbView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rgbView.Location = new System.Drawing.Point(405, 4);
-            this.rgbView.Margin = new System.Windows.Forms.Padding(4);
-            this.rgbView.Name = "rgbView";
-            this.rgbView.Size = new System.Drawing.Size(393, 174);
-            this.rgbView.TabIndex = 7;
-            this.rgbView.Text = "rgbView1";
-            this.rgbView.Value = System.Drawing.Color.Empty;
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -301,6 +302,7 @@ namespace LuzesRGB {
             this.Name = "MainForm";
             this.Text = "LuzesRGB";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.chart)).EndInit();
             this.tableLayoutPanel2.ResumeLayout(false);
