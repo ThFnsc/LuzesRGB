@@ -4,28 +4,45 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace LuzesRGB {
-    public partial class RGBView : Control {
+    public partial class RGBView : Control, IColorizable {
         private int columnHeight;
         private ColorSelected colorSelected;
         private Color _value;
-        public Color Value { get { return _value; } set {
-                if (_value != value) {
-                    _value = value;
-                    if(ValueChanged!=null) ValueChanged.Invoke(this, _value);
-                    Invalidate();
-                }
-            } }
+
+        public Color Value { get => GetColor().Result; set => SetColor(value).Wait(); }
+
+        public Task SetColor(Color color)
+        {
+            _value = color;
+            if (ValueChanged != null) 
+                ValueChanged.Invoke(this, _value);
+            Invalidate();
+            return Task.CompletedTask;
+        }
+
+        public Task<Color> GetColor() =>
+            Task.FromResult(_value);
+
+        public bool TurnOnWhenConnected { get; set; }
+        public IPAddress IPAddress { get; set; }
+
+        public bool Connected => true;
 
         public event EventHandler<Color> ValueChanged;
+        public event EventHandler OnConnecting;
+        public event EventHandler OnConnect;
+        public event EventHandler OnConnectionLost;
+        public event EventHandler OnConnectFail;
 
         public RGBView() {
             InitializeComponent();
-            Value = Color.OrangeRed;
+            SetColor(Color.OrangeRed).Wait();
             colorSelected = ColorSelected.None;
         }
 
@@ -60,13 +77,13 @@ namespace LuzesRGB {
                 case ColorSelected.None:
                     return;
                 case ColorSelected.Red:
-                    Value = Color.FromArgb(ColorFromMousePos(), _value.G, _value.B);
+                    SetColor(Color.FromArgb(ColorFromMousePos(), _value.G, _value.B)).Wait();
                     break;
                 case ColorSelected.Green:
-                    Value = Color.FromArgb(_value.R, ColorFromMousePos(), _value.B);
+                    SetColor(Color.FromArgb(_value.R, ColorFromMousePos(), _value.B)).Wait();
                     break;
                 case ColorSelected.Blue:
-                    Value = Color.FromArgb(_value.R, _value.G, ColorFromMousePos());
+                    SetColor(Color.FromArgb(_value.R, _value.G, ColorFromMousePos())).Wait();
                     break;
             }
             base.OnMouseMove(e);
@@ -85,11 +102,11 @@ namespace LuzesRGB {
                 return value;
             }
             if (e.Y <= columnHeight)
-                Value = Color.FromArgb(Calculate(_value.R,e.Delta), _value.G, _value.B);
+                SetColor(Color.FromArgb(Calculate(_value.R, e.Delta), _value.G, _value.B)).Wait();
             else if (e.Y <= columnHeight * 2)
-                Value = Color.FromArgb(_value.R, Calculate(_value.G,e.Delta), _value.B);
+                SetColor(Color.FromArgb(_value.R, Calculate(_value.G,e.Delta), _value.B)).Wait(); 
             else if (e.Y <= columnHeight * 3)
-                Value = Color.FromArgb(_value.R, _value.G, Calculate(_value.B, e.Delta));
+                SetColor(Color.FromArgb(_value.R, _value.G, Calculate(_value.B, e.Delta))).Wait();
             base.OnMouseWheel(e);
         }
 
@@ -97,6 +114,15 @@ namespace LuzesRGB {
             base.OnSizeChanged(e);
             columnHeight = this.Height / 4;
         }
+
+        public Task Connect() =>
+            Task.CompletedTask;
+
+        public Task Turn(bool state) =>
+            Task.CompletedTask;
+
+        public Task Disconnect() =>
+            Task.CompletedTask;
     }
 
     enum ColorSelected {
