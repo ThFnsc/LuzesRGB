@@ -131,7 +131,7 @@
     </Compile>
     <Compile Include="Services\Lights\MagicHomeLight.cs" />
     <Compile Include="Services\Lights\SmartLight.cs" />
-    <Compile Include="Services\WindowsStartup.cs" />
+    <Compile Include="Helpers\WindowsStartup.cs" />
     <Compile Include="Services\Lights\YeelightLight.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>

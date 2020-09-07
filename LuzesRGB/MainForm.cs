@@ -10,6 +10,7 @@ using System.Linq;
 using LuzesRGB.Services.Lights;
 using LuzesRGB.Services;
 using LuzesRGB.Services.Controls;
+using LuzesRGB.Helpers;
 
 namespace LuzesRGB
 {
@@ -105,7 +106,7 @@ namespace LuzesRGB
         {
             if (Properties.Settings.Default.StartInvisible && boot)
                 BeginInvoke(new MethodInvoker(() => Hide()));
-            cbLaunchOnStartup.Checked = Properties.Settings.Default.StartWithWindows;
+            cbLaunchOnStartup.Checked = WindowsStartup.Get();
             Icon = Properties.Resources.icon_ico;
             trayIcon.Icon = Icon;
         }
@@ -135,17 +136,9 @@ namespace LuzesRGB
             Properties.Settings.Default.Save();
         }
 
-        private void LaunchOnStartupCheckedChanged(object sender, EventArgs e)
-        {
-            var keys = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-            if (cbLaunchOnStartup.Checked)
-                keys.SetValue(Text, $"\"{Application.ExecutablePath}\" -boot");
-            else keys.SetValue(Text, false);
-            Properties.Settings.Default.StartWithWindows = cbLaunchOnStartup.Checked;
-            Properties.Settings.Default.Save();
-            cbStartInvisible.Enabled = cbLaunchOnStartup.Checked;
-        }
-
+        private void LaunchOnStartupCheckedChanged(object sender, EventArgs e) =>
+            WindowsStartup.Set(cbLaunchOnStartup.Checked);
+        
         private void BrightnessLimitScrolled(object sender, EventArgs e) =>
             ChannelLimit = _audioToColorService.BrightnessCap = Convert.ToByte(tLimit.Value);
 
