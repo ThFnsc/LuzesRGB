@@ -40,6 +40,8 @@ namespace LuzesRGB.Services.Lights
                     AutoRefreshInterval = TimeSpan.FromSeconds(2)
                 };
                 await _light.ConnectAsync();
+                if (TurnOnWhenConnected)
+                    await Turn(true);
                 OnConnect?.Invoke(this, null);
                 return Connected;
             }
@@ -70,8 +72,11 @@ namespace LuzesRGB.Services.Lights
             _lastColor = color;
         }
 
-        public async Task Turn(bool state)=>
-            await _light.SetPowerAsync(state);
+        public async Task Turn(bool state)
+        {
+            for (byte i = 0; i < 3; i++, await Task.Delay(100))
+                await _light.SetPowerAsync(state);
+        }
 
         Task<System.Drawing.Color> IColorizable.GetColor() =>
             Task.FromResult(_lastColor);

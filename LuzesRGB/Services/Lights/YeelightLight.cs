@@ -61,8 +61,8 @@ namespace LuzesRGB.Services.Lights
 
         public async Task SetColor(Color color)
         {
-            Console.WriteLine(color);
-            await Task.WhenAll(_yeelight?.SetRGBColor(color.R, color.G, color.B, 300), _yeelight.SetBrightness(Math.Max(color.R, Math.Max(color.G, color.B))));
+            if(_yeelight!=null)
+                await Task.WhenAll(_yeelight.SetRGBColor(color.R, color.G, color.B, 300), _yeelight.SetBrightness(Math.Max(color.R, Math.Max(color.G, color.B))));
             _lastColor = color;
             OnColorChanged?.Invoke(this, color);
         }

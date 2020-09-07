@@ -11,7 +11,7 @@ using System.Net;
 
 namespace LuzesRGB.Services.Lights
 {
-    class MagichomeLED : IDisposable, ISmartLight
+    public class MagicHomeLightLegacy : IDisposable, ISmartLight
     {
         TcpClient client;
         NetworkStream nwStream;
@@ -23,7 +23,7 @@ namespace LuzesRGB.Services.Lights
         public event EventHandler<Color> OnColorChanged;
 
         public IPAddress IPAddress { get; set; }
-        public int Port { get; set; }
+        public int Port { get; set; } = 5577;
         public bool Connected { get { return client != null && client.Connected; } }
         public bool TurnOnWhenConnected { get; set; }
         private Color _lastColorSent;
@@ -38,11 +38,6 @@ namespace LuzesRGB.Services.Lights
 
         public Task<Color> GetColor() =>
             Task.FromResult(_lastColorSent);
-
-        public MagichomeLED(int port = 5577)
-        {
-            Port = port;
-        }
 
         public async Task<bool> Connect()
         {
@@ -66,13 +61,8 @@ namespace LuzesRGB.Services.Lights
             }
         }
 
-        public async Task Turn(bool state)
-        {
-            if (state)
-                await SendCommand(new byte[] { 0x71, 0x23, 0x0f }, (b, l) => { });
-            else
-                await SendCommand(new byte[] { 0x71, 0x24, 0x0f }, (b, l) => { });
-        }
+        public Task Turn(bool state)=>
+            SendCommand(new byte[] { 0x71, (byte)(state ? 0x23 : 0x24), 0x0f }, (b, l) => { });
 
         public async Task SendCommand(byte[] msg, Action<byte[], int> reponse)
         {

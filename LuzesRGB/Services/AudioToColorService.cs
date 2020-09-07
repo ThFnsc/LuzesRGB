@@ -47,9 +47,10 @@ namespace LuzesRGB.Services
 
         public async Task RemoveAll()
         {
-            await Task.WhenAll(SmartLights.Select(s => s.SetColor(Color.Black)));
-            SmartLights.OfType<IDisposable>().Each(s => s.Dispose());
+            var lights = SmartLights.ToList();
             SmartLights.Clear();
+            await Task.WhenAll(lights.Select(s => s.Turn(false)));
+            SmartLights.OfType<IDisposable>().Each(s => s.Dispose());
         }
 
         private void GotColor(object sender, Color e)=>

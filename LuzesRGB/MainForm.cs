@@ -65,11 +65,11 @@ namespace LuzesRGB
 
         public async Task UpdateLights()
         {
+            Properties.Settings.Default.SavedLamps = lbLights.Items.OfType<SmartLight>().ToJson();
+            Properties.Settings.Default.Save();
             await _audioToColorService.RemoveAll();
             _audioToColorService.SmartLights.AddRange(lbLights.Items.OfType<SmartLight>().Select(s => s.Instantiate()));
             await _audioToColorService.ConnectAll();
-            Properties.Settings.Default.SavedLamps = lbLights.Items.OfType<SmartLight>().ToJson();
-            Properties.Settings.Default.Save();
         }
 
         private void RgbView_ValueChanged(object sender, Color color) =>
@@ -173,6 +173,9 @@ namespace LuzesRGB
                 switch (edit.DialogResult)
                 {
                     case DialogResult.OK:
+                        var lights = lbLights.Items.OfType<SmartLight>().ToArray();
+                        lbLights.Items.Clear();
+                        lbLights.Items.AddRange(lights);
                         break;
                     case DialogResult.Abort:
                         lbLights.Items.Remove(selected);

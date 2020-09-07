@@ -12,7 +12,7 @@ namespace LuzesRGB.Services.Lights
         private static readonly Dictionary<Types, Type> Mapping = new Dictionary<Types, Type>
             {
                 {Types.Magichome, typeof(MagicHomeLight) },
-                {Types.LegacyMagichome, typeof(MagichomeLED) },
+                {Types.LegacyMagichome, typeof(MagicHomeLightLegacy) },
                 {Types.Yeelight, typeof(YeelightLight) }
             };
 
