@@ -7,65 +7,52 @@ using Microsoft.Win32;
 using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
+using LuzesRGB.Services.Lights;
+using LuzesRGB.Services;
+using LuzesRGB.Services.Controls;
 
-namespace LuzesRGB {
-    public partial class MainForm : Form {
-        public byte ChannelLimit { get { return Properties.Settings.Default.ChannelLimit; } set { Properties.Settings.Default.ChannelLimit = value; Properties.Settings.Default.Save(); }}
+namespace LuzesRGB
+{
+    public partial class MainForm : Form
+    {
+        public byte ChannelLimit { get { return Properties.Settings.Default.ChannelLimit; } set { Properties.Settings.Default.ChannelLimit = value; Properties.Settings.Default.Save(); } }
         private bool forceClose = false;
-        private bool boot = false;
+        private readonly bool boot = false;
 
-        IColorizable strip;
-        public int Mode { get; set; }
         bool doGraphUpdate = true;
-        double hue = 0;
-        IAudioProvider audioProvider;
-        IAudioToColorConverter audioToColorConverter;
-        List<IColorizable> audioResponsiveElements;
+        private readonly AudioToColorService _audioToColorService;
 
-        public MainForm(string[] progArgs) {
+        public MainForm(string[] progArgs)
+        {
             foreach (var arg in progArgs)
                 if (arg == "-boot") boot = true;
 
-            SystemEvents.SessionEnding += (sender, args) => {
+            SystemEvents.SessionEnding += (sender, args) =>
+            {
                 args.Cancel = true;
                 Shutdown();
             };
 
-            strip = new YeelightManager() { TurnOnWhenConnected = true };
-            strip.OnConnecting += (s, ea) => tbIp.ForeColor = Color.Blue;
-            strip.OnConnect += (s, ea) => tbIp.ForeColor = Color.DarkGreen;
-            strip.OnConnectFail += (s, ea) => tbIp.ForeColor = Color.OrangeRed;
-            strip.OnConnectionLost += (s, ea) => tbIp.ForeColor = Color.DarkMagenta;
+            _audioToColorService = new AudioToColorService(new LoopbackAudio(), new HistoriedAudioToColorConverter());
+            _audioToColorService.Start();
+            _audioToColorService.OnAudioData += OnAudioData;
+            _audioToColorService.OnColorChanged += NewColor;
 
-            audioProvider = new LoopbackAudio();
-            audioToColorConverter = new HistoriedAudioToColorConverter();
-            audioProvider.OnAudioData += audioToColorConverter.NewSpectrum;
-            audioProvider.OnAudioData += AudioProvider_OnAudioData;
-            audioToColorConverter.OnColorAvailable += AudioToColorConverter_OnColorAvailable;
             InitializeComponent();
 
-            audioResponsiveElements = new List<IColorizable>()
-            {
-                rgbView,
-                strip
-            };
+            lbLights.Items.AddRange(Properties.Settings.Default.SavedLamps.AsJson<List<SmartLight>>().ToArray());
+
+            _ = UpdateLights();
 
             cbStartInvisible.Checked = Properties.Settings.Default.StartInvisible;
-            rgbView.ValueChanged += RgbView_ValueChanged;
+            rgbView.OnColorChangedByUser += RgbView_ValueChanged;
             tLimit.Value = ChannelLimit;
-            Task.Run(() => {
-                SafeCall(async () => {
-                    tbIp.Text = Properties.Settings.Default.Ip;
-                    await Connect();
-                    cbMode_SelectedIndexChanged(null, null);
-                });
-            });
         }
 
-        private void AudioToColorConverter_OnColorAvailable(object sender, Color color) =>
-            audioResponsiveElements.ForEach(audioResponsiveElement => audioResponsiveElement.SetColor(color));
+        private void NewColor(object sender, Color e) =>
+            rgbView.Color = e;
 
-        private void AudioProvider_OnAudioData(object sender, float[] spectrum)
+        private void OnAudioData(object sender, float[] spectrum)
         {
             if (doGraphUpdate)
                 SafeCall(() =>
@@ -76,94 +63,46 @@ namespace LuzesRGB {
                 });
         }
 
-        private void RgbView_ValueChanged(object sender, Color color) =>
-            audioResponsiveElements
-                .Where(audioResponsiveElement => audioResponsiveElement != sender)
-                .ToList()
-                .ForEach(audioResponsiveElement => audioResponsiveElement.SetColor(color));
-
-        private void Calculate()
+        public async Task UpdateLights()
         {
-            switch (Mode)
-            {
-                case 0:
-                    break;
-                case 1:
-                    var rainbow = new HSLColor(hue++, 255.0, 128.0);
-                    audioResponsiveElements.ForEach(audioResponsiveElement => audioResponsiveElement.SetColor(rainbow));
-                    if (hue >= 256)
-                        hue = 0;
-                    break;
-                case 2:
-                    break;
-            }
-        }
-
-        private void updater_Tick(object sender, EventArgs e) =>
-            Calculate();
-
-        private void SafeCall(Action action) {
-            if (this.InvokeRequired)
-                try {
-                    this.Invoke(action);
-                } catch (ObjectDisposedException) { } else action.Invoke();
-        }
-
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e) {
-            if (!forceClose) {
-                e.Cancel = true;
-                this.Visible = false;
-            }
-        }
-
-        private void Shutdown() {
-            audioProvider.Dispose();
-            foreach(var audioResponsiveElement in audioResponsiveElements)
-            {
-                audioResponsiveElement.SetColor(Color.Black);
-                if (audioResponsiveElement is IDisposable disposable)
-                    disposable.Dispose();
-            }
-        }
-
-        private void cbMode_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            SafeCall(() =>
-            {
-                if (cbMode.SelectedIndex == -1)
-                    cbMode.SelectedIndex = Properties.Settings.Default.Mode;
-                else
-                {
-                    Properties.Settings.Default.Mode = cbMode.SelectedIndex;
-                    Properties.Settings.Default.Save();
-                    audioProvider.Stop();
-                    switch (cbMode.SelectedIndex)
-                    {
-                        case 0:
-                            break;
-                        case 1:
-                            break;
-                        case 2:
-                            audioProvider.Start();
-                            break;
-                    }
-                }
-                Mode = cbMode.SelectedIndex;
-            });
-        }
-
-        private void chart_Click(object sender, EventArgs e) =>
-            doGraphUpdate = !doGraphUpdate;
-
-        private void tbIp_TextChanged(object sender, EventArgs e) {
-            Properties.Settings.Default.Ip = tbIp.Text;
+            await _audioToColorService.RemoveAll();
+            _audioToColorService.SmartLights.AddRange(lbLights.Items.OfType<SmartLight>().Select(s => s.Instantiate()));
+            await _audioToColorService.ConnectAll();
+            Properties.Settings.Default.SavedLamps = lbLights.Items.OfType<SmartLight>().ToJson();
             Properties.Settings.Default.Save();
         }
 
-        private void tbIp_DoubleClick(object sender, EventArgs e) =>
-            _ = Connect();
+        private void RgbView_ValueChanged(object sender, Color color) =>
+            _ = _audioToColorService.SetColor(color);
 
-        private void MainForm_Load(object sender, EventArgs e) {
+        private void SafeCall(Action action)
+        {
+            if (InvokeRequired)
+                try
+                {
+                    Invoke(action);
+                }
+                catch (ObjectDisposedException) { }
+            else action.Invoke();
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (!forceClose)
+            {
+                e.Cancel = true;
+                Visible = false;
+            }
+        }
+
+        private void Shutdown() =>
+            _audioToColorService.Dispose();
+
+        private void ChartClicked(object sender, EventArgs e) =>
+            doGraphUpdate = !doGraphUpdate;
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
             if (Properties.Settings.Default.StartInvisible && boot)
                 BeginInvoke(new MethodInvoker(() => Hide()));
             cbLaunchOnStartup.Checked = Properties.Settings.Default.StartWithWindows;
@@ -171,27 +110,33 @@ namespace LuzesRGB {
             trayIcon.Icon = Icon;
         }
 
-        private void trayIcon_DoubleClick(object sender, EventArgs e) =>
-            Task.Delay(250).ContinueWith(_ => SafeCall(() => this.Visible = true));
+        private void TrayIconDoubleClicked(object sender, EventArgs e) =>
+            Task.Delay(250).ContinueWith(_ => SafeCall(() => Visible = true));
 
-        private void trayStrip_ItemClicked(object sender, ToolStripItemClickedEventArgs e) {
-            if (e.ClickedItem == buttonExit) {
+        private void TrayStripItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+            if (e.ClickedItem == buttonExit)
+            {
                 forceClose = true;
-                this.Close();
-            } else if (e.ClickedItem == buttonShow)
-                this.Visible = true;
-            else if (e.ClickedItem == buttonRestart) {
+                Close();
+            }
+            else if (e.ClickedItem == buttonShow)
+                Visible = true;
+            else if (e.ClickedItem == buttonRestart)
+            {
                 forceClose = true;
                 Application.Restart();
             }
         }
 
-        private void cbStartInvisible_CheckedChanged(object sender, EventArgs e) {
+        private void StartInvisibleCheckedChanged(object sender, EventArgs e)
+        {
             Properties.Settings.Default.StartInvisible = cbStartInvisible.Checked;
             Properties.Settings.Default.Save();
         }
 
-        private void cbLaunchOnStartup_CheckedChanged(object sender, EventArgs e) {
+        private void LaunchOnStartupCheckedChanged(object sender, EventArgs e)
+        {
             var keys = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
             if (cbLaunchOnStartup.Checked)
                 keys.SetValue(Text, $"\"{Application.ExecutablePath}\" -boot");
@@ -201,25 +146,40 @@ namespace LuzesRGB {
             cbStartInvisible.Enabled = cbLaunchOnStartup.Checked;
         }
 
-        private void tLimit_Scroll(object sender, EventArgs e) =>
-            ChannelLimit = Convert.ToByte(tLimit.Value);
-
-        public async Task Connect() {
-            if (IPAddress.TryParse(tbIp.Text, out IPAddress ipAddress))
-            {
-                strip.IPAddress = ipAddress;
-                await strip.Connect();
-            }
-            else
-                tbIp.ForeColor = Color.OrangeRed;
-        }
-
-        private void TbIp_KeyUp(object sender, KeyEventArgs e) {
-            if (e.KeyCode == Keys.Enter)
-                _ = Connect();
-        }
+        private void BrightnessLimitScrolled(object sender, EventArgs e) =>
+            ChannelLimit = _audioToColorService.BrightnessCap = Convert.ToByte(tLimit.Value);
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e) =>
             Shutdown();
+
+        private void NewLight(object sender, EventArgs e)
+        {
+            var newLampForm = new EditLight(null);
+            if (newLampForm.ShowDialog() == DialogResult.OK)
+            {
+                lbLights.Items.Add(newLampForm.SmartLight);
+                _ = UpdateLights();
+            }
+        }
+
+        private void LightListDoubleClicked(object sender, EventArgs e)
+        {
+            var index = lbLights.IndexFromPoint((e as MouseEventArgs).Location);
+            if (index != -1)
+            {
+                var selected = lbLights.SelectedItem as SmartLight;
+                var edit = new EditLight(selected);
+                edit.ShowDialog();
+                switch (edit.DialogResult)
+                {
+                    case DialogResult.OK:
+                        break;
+                    case DialogResult.Abort:
+                        lbLights.Items.Remove(selected);
+                        break;
+                }
+                _ = UpdateLights();
+            }
+        }
     }
 }

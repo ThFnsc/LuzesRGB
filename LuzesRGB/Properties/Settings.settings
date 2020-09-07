@@ -17,5 +17,8 @@
     <Setting Name="ChannelLimit" Type="System.Byte" Scope="User">
       <Value Profile="(Default)">100</Value>
     </Setting>
+    <Setting Name="SavedLamps" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

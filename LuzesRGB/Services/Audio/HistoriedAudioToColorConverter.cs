@@ -11,9 +11,9 @@ namespace LuzesRGB
     {
         public event EventHandler<Color> OnColorAvailable;
 
-        float[,] history = new float[3, 7500];
+        readonly float[,] history = new float[3, 7500];
+        readonly float MIN_THRESHOLD = 0.04f;
         short histPos = 0;
-        float MIN_THRESHOLD = 0.04f;
 
         public void NewSpectrum(object sender, float[] spectrum)
         {
@@ -25,8 +25,8 @@ namespace LuzesRGB
             int[] amps = new int[freqs.Length];
             for (int i = 0; i < freqs.Length; i++)
                 amps[i] = MapN(freqs[i], 0, MaxOf(history, i), 0, 255);
-            amps[1] = Math.Max(amps[1] - amps[0], 0);
-            amps[2] = Math.Max(amps[2] - amps[0], 0);
+            amps[1] = Math.Max(amps[1] - amps[0]/2, 0);
+            amps[2] = Math.Max(amps[2] - amps[0]/2, 0);
             OnColorAvailable?.Invoke(this, Color.FromArgb(amps[0], amps[1], amps[2]));
         }
 

@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LuzesRGB
+namespace LuzesRGB.Services.Lights
 {
-    public interface IColorizable
+    public interface ISmartLight : IColorizable
     {
         event EventHandler OnConnecting;
         event EventHandler OnConnect;
@@ -16,11 +15,9 @@ namespace LuzesRGB
         event EventHandler OnConnectFail;
         bool TurnOnWhenConnected { get; set; }
         IPAddress IPAddress { get; set; }
-        Task Connect();
+        Task<bool> Connect();
         bool Connected { get; }
         Task Turn(bool state);
         Task Disconnect();
-        Task SetColor(Color color);
-        Task<Color> GetColor();
     }
 }
