@@ -9,21 +9,21 @@ using System.IO;
 using System.Threading;
 using System.Net;
 
-namespace LuzesRGB
+namespace LuzesRGB.Services.Lights
 {
-    class MagicHomeLEDStrip : IDisposable, IColorizable
+    public class MagicHomeLightLegacy : IDisposable, ISmartLight
     {
         TcpClient client;
         NetworkStream nwStream;
-        private readonly Task connChecker;
 
         public event EventHandler OnConnecting;
         public event EventHandler OnConnect;
         public event EventHandler OnConnectionLost;
         public event EventHandler OnConnectFail;
+        public event EventHandler<Color> OnColorChanged;
 
         public IPAddress IPAddress { get; set; }
-        public int Port { get; set; }
+        public int Port { get; set; } = 5577;
         public bool Connected { get { return client != null && client.Connected; } }
         public bool TurnOnWhenConnected { get; set; }
         private Color _lastColorSent;
@@ -33,40 +33,18 @@ namespace LuzesRGB
             if (!_lastColorSent.Equals(color))
                 await SendCommand(new byte[] { 0x31, color.R, color.G, color.B, 0x00, 0x01, 0x01 });
             _lastColorSent = color;
+            OnColorChanged?.Invoke(this, color);
         }
 
         public Task<Color> GetColor() =>
             Task.FromResult(_lastColorSent);
 
-        public MagicHomeLEDStrip(IPAddress ip = null, int port = 5577)
-        {
-            IPAddress = ip;
-            Port = port;
-            connChecker = SetInterval(async () =>
-            {
-                if (!Connected)
-                    await Connect();
-            }, 2000);
-        }
-
-        private Task SetInterval(Action action, int ms)
-        {
-            return Task.Run(() =>
-            {
-                while (true)
-                {
-                    Thread.Sleep(ms);
-                    action.Invoke();
-                }
-            });
-        }
-
-        public async Task Connect()
+        public async Task<bool> Connect()
         {
             try
             {
                 if (IPAddress == null)
-                    return;
+                    return false;
                 OnConnecting?.Invoke(this, null);
                 client?.Dispose();
                 client = new TcpClient(IPAddress.ToString(), Port) { NoDelay = true };
@@ -74,20 +52,17 @@ namespace LuzesRGB
                 if (TurnOnWhenConnected)
                     await Turn(true);
                 OnConnect?.Invoke(this, null);
+                return Connected;
             }
             catch (Exception)
             {
                 OnConnectFail?.Invoke(this, null);
+                return false;
             }
         }
 
-        public async Task Turn(bool state)
-        {
-            if (state)
-                await SendCommand(new byte[] { 0x71, 0x23, 0x0f }, (b, l) => { });
-            else
-                await SendCommand(new byte[] { 0x71, 0x24, 0x0f }, (b, l) => { });
-        }
+        public Task Turn(bool state)=>
+            SendCommand(new byte[] { 0x71, (byte)(state ? 0x23 : 0x24), 0x0f }, (b, l) => { });
 
         public async Task SendCommand(byte[] msg, Action<byte[], int> reponse)
         {
@@ -109,7 +84,8 @@ namespace LuzesRGB
             Buffer.SetByte(msgWCS, msg.Length, (byte)checksum);
             try
             {
-                await nwStream?.WriteAsync(msgWCS, 0, msgWCS.Length);
+                if(nwStream!=null)
+                    await nwStream.WriteAsync(msgWCS, 0, msgWCS.Length);
             }
             catch (Exception)
             {
@@ -117,12 +93,11 @@ namespace LuzesRGB
             }
         }
 
-        public Task Disconnect()=>
-            Task.Run(()=> client.Close());
+        public Task Disconnect() =>
+            Task.Run(() => client.Close());
 
         public void Dispose()
         {
-            connChecker?.Dispose();
             nwStream?.Flush();
             if (client.Connected)
                 client.Close();

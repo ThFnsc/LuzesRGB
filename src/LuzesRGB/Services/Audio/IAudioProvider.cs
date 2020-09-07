@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace LuzesRGB
 {
-    interface IAudioProvider : IDisposable
+    public interface IAudioProvider : IDisposable
     {
-        void Start();
-        void Stop();
+        Task Start();
+        Task Stop();
         event EventHandler<float[]> OnAudioData;
     }
 }

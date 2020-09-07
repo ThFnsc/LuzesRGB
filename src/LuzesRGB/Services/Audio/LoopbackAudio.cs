@@ -74,10 +74,10 @@ namespace LuzesRGB
                 audio.StopRecording();
         }
 
-        public void Start() =>
-            audio.StartRecording();
+        public Task Start() =>
+            Task.Run(()=> audio.StartRecording());
 
-        public void Stop() =>
-            audio.StopRecording();
+        public Task Stop() =>
+            Task.Run(() => audio.StopRecording());
     }
 }
