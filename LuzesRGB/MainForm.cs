@@ -107,6 +107,7 @@ namespace LuzesRGB
             if (Properties.Settings.Default.StartInvisible && boot)
                 BeginInvoke(new MethodInvoker(() => Hide()));
             cbLaunchOnStartup.Checked = WindowsStartup.Get();
+            cbStartInvisible.Enabled = cbLaunchOnStartup.Checked;
             Icon = Properties.Resources.icon_ico;
             trayIcon.Icon = Icon;
         }
@@ -137,7 +138,7 @@ namespace LuzesRGB
         }
 
         private void LaunchOnStartupCheckedChanged(object sender, EventArgs e) =>
-            WindowsStartup.Set(cbLaunchOnStartup.Checked);
+            WindowsStartup.Set(cbStartInvisible.Enabled = cbLaunchOnStartup.Checked);
         
         private void BrightnessLimitScrolled(object sender, EventArgs e) =>
             ChannelLimit = _audioToColorService.BrightnessCap = Convert.ToByte(tLimit.Value);
