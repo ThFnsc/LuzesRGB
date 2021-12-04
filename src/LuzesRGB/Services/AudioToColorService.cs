@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace LuzesRGB.Services
@@ -39,7 +38,7 @@ namespace LuzesRGB.Services
         }
 
         public Task Start() => _audioProvider.Start();
-        
+
         public Task Stop() => _audioProvider.Stop();
 
         public async Task ConnectAll() =>
@@ -53,7 +52,7 @@ namespace LuzesRGB.Services
             SmartLights.OfType<IDisposable>().Each(s => s.Dispose());
         }
 
-        private void GotColor(object sender, Color e)=>
+        private void GotColor(object sender, Color e) =>
             _ = SetColor(e.SetMaxBrightness(BrightnessCap));
 
         public Task<Color> GetColor() =>

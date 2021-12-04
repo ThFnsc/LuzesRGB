@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using MagicHome.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -7,7 +7,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using MagicHome.Exceptions;
 
 namespace MagicHome
 {
@@ -86,7 +85,7 @@ namespace MagicHome
         /// Internal timer for refresh operations
         /// </summary>
         private Timer _autoRefreshTimer;
-        private bool disposed;
+        private bool _disposed;
         #endregion
 
         #region Constants
@@ -122,7 +121,7 @@ namespace MagicHome
         /// Connects to the light. You need to assign the IP address manually before you call this method.
         /// </summary>
         /// <returns></returns>
-        public Task ConnectAsync() => ConnectAsync(this._address);
+        public Task ConnectAsync() => ConnectAsync(_address);
 
         public Task ConnectAsync(string ipAddress) => ConnectAsync(IPAddress.Parse(ipAddress));
 
@@ -153,7 +152,7 @@ namespace MagicHome
             {
                 // Only refresh when it's enabled
                 if (AutoRefreshEnabled)
-                    await this.RefreshAsync();
+                    await RefreshAsync();
             }, null, TimeSpan.Zero, AutoRefreshInterval);
         }
 
@@ -173,7 +172,8 @@ namespace MagicHome
                 IsOn = DeterminePowerState(resultAsHex[2]); // Power state
                 Mode = DetermineLightMode(resultAsHex[3]);
                 Color = DetermineColor(Mode, result);
-            }catch(Exception) { }
+            }
+            catch (Exception) { }
         }
 
         /// <summary>
@@ -192,18 +192,15 @@ namespace MagicHome
         /// Reads data from the light
         /// </summary>
         /// <returns></returns>
-        private Task<byte[]> ReadAsync()
-        {
-            return Task.Run(() =>
-            {
-                var buffer = new byte[BufferSize];
-                _socket.ReceiveTimeout = Timeout.Milliseconds;
+        private Task<byte[]> ReadAsync() => Task.Run(() =>
+                                                      {
+                                                          var buffer = new byte[BufferSize];
+                                                          _socket.ReceiveTimeout = Timeout.Milliseconds;
 
-                var result = _socket.Receive(buffer);
-                // TODO: Check result
-                return buffer;
-            });
-        }
+                                                          var result = _socket.Receive(buffer);
+                                                          // TODO: Check result
+                                                          return buffer;
+                                                      });
 
         /// <summary>
         /// Sends data to the light.
@@ -217,16 +214,13 @@ namespace MagicHome
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
-        public Task SendAsync(IEnumerable<byte> bytes)
-        {
-            return Task.Run(() =>
-            {
-                if (UseChecksum)
-                    bytes = CalculateChecksum(bytes.ToList());
-                if(!disposed)
-                    _socket.Send(bytes.ToArray());
-            });
-        }
+        public Task SendAsync(IEnumerable<byte> bytes) => Task.Run(() =>
+                                                                    {
+                                                                        if (UseChecksum)
+                                                                            bytes = CalculateChecksum(bytes.ToList());
+                                                                        if (!_disposed)
+                                                                            _socket.Send(bytes.ToArray());
+                                                                    });
 
         /// <summary>
         /// Applies the checksum to the given data.
@@ -257,8 +251,8 @@ namespace MagicHome
         /// <returns></returns>
         public async Task SetPowerAsync(bool isOn)
         {
-            var packet = isOn ? new byte[] {0x71, 0x23, 0x0f} : new byte[] {0x71, 0x24, 0x0f};
-            
+            var packet = isOn ? new byte[] { 0x71, 0x23, 0x0f } : new byte[] { 0x71, 0x24, 0x0f };
+
             await SendAsync(packet);
             IsOn = isOn;
         }
@@ -283,7 +277,7 @@ namespace MagicHome
         /// <returns></returns>
         public async Task SetColorAsync(Color color)
         {
-            await SendAsync(0x41, 
+            await SendAsync(0x41,
                 color.R, color.G, color.B,
                 0x00, 0x00, 0x0f);
 
@@ -316,7 +310,7 @@ namespace MagicHome
                 case "60":
                     return LightMode.Custom;
                 case "2a":
-                case "2b": 
+                case "2b":
                 case "2c":
                 case "2d":
                 case "2e":
@@ -354,7 +348,7 @@ namespace MagicHome
         #region Interface Implementations
         public void Dispose()
         {
-            disposed = true;
+            _disposed = true;
             _autoRefreshTimer?.Dispose();
             _socket?.Shutdown(SocketShutdown.Both);
             _socket?.Dispose();

@@ -1,12 +1,5 @@
-﻿using LuzesRGB.Services;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+﻿using System;
 using System.Drawing;
-using System.Linq;
-using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -14,21 +7,21 @@ namespace LuzesRGB.Services.Controls
 {
     public partial class RGBView : Control, IColorizable
     {
-        private int columnHeight;
-        private ColorSelected colorSelected;
+        private int _columnHeight;
+        private ColorSelected _colorSelected;
         private Color _value;
 
         public Color Color { get => GetColor().Result; set => NewColor(value, false); }
 
         public event EventHandler<Color> OnColorChanged;
-        
+
         public event EventHandler<Color> OnColorChangedByUser;
 
         public RGBView()
         {
             InitializeComponent();
             NewColor(Color.OrangeRed, false);
-            colorSelected = ColorSelected.None;
+            _colorSelected = ColorSelected.None;
         }
 
         public Task SetColor(Color color)
@@ -53,9 +46,9 @@ namespace LuzesRGB.Services.Controls
         {
             var gfx = pe.Graphics;
             gfx.Clear(_value);
-            gfx.FillRectangle(new SolidBrush(Color.Red), new RectangleF(0.0F, 0.0F, this.Width * (_value.R / 255.0F), columnHeight));
-            gfx.FillRectangle(new SolidBrush(Color.Green), new RectangleF(0.0F, columnHeight, this.Width * (_value.G / 255.0F), columnHeight));
-            gfx.FillRectangle(new SolidBrush(Color.Blue), new RectangleF(0.0F, columnHeight * 2, this.Width * (_value.B / 255.0F), columnHeight));
+            gfx.FillRectangle(new SolidBrush(Color.Red), new RectangleF(0.0F, 0.0F, Width * (_value.R / 255.0F), _columnHeight));
+            gfx.FillRectangle(new SolidBrush(Color.Green), new RectangleF(0.0F, _columnHeight, Width * (_value.G / 255.0F), _columnHeight));
+            gfx.FillRectangle(new SolidBrush(Color.Blue), new RectangleF(0.0F, _columnHeight * 2, Width * (_value.B / 255.0F), _columnHeight));
         }
 
         protected override void OnPaintBackground(PaintEventArgs pevent)
@@ -65,23 +58,20 @@ namespace LuzesRGB.Services.Controls
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            if (e.Y <= columnHeight)
-                colorSelected = ColorSelected.Red;
-            else if (e.Y <= columnHeight * 2)
-                colorSelected = ColorSelected.Green;
-            else if (e.Y <= columnHeight * 3)
-                colorSelected = ColorSelected.Blue;
+            if (e.Y <= _columnHeight)
+                _colorSelected = ColorSelected.Red;
+            else if (e.Y <= _columnHeight * 2)
+                _colorSelected = ColorSelected.Green;
+            else if (e.Y <= _columnHeight * 3)
+                _colorSelected = ColorSelected.Blue;
             OnMouseMove(e);
             base.OnMouseDown(e);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            int ColorFromMousePos()
-            {
-                return Math.Max(0, Math.Min(255, e.X * 255 / this.Width));
-            }
-            switch (colorSelected)
+            int ColorFromMousePos() => Math.Max(0, Math.Min(255, e.X * 255 / Width));
+            switch (_colorSelected)
             {
                 case ColorSelected.None:
                     return;
@@ -100,7 +90,7 @@ namespace LuzesRGB.Services.Controls
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            colorSelected = ColorSelected.None;
+            _colorSelected = ColorSelected.None;
             base.OnMouseUp(e);
         }
 
@@ -113,11 +103,11 @@ namespace LuzesRGB.Services.Controls
                 if (value > 255) return 255;
                 return value;
             }
-            if (e.Y <= columnHeight)
+            if (e.Y <= _columnHeight)
                 NewColor(Color.FromArgb(Calculate(_value.R, e.Delta), _value.G, _value.B));
-            else if (e.Y <= columnHeight * 2)
+            else if (e.Y <= _columnHeight * 2)
                 NewColor(Color.FromArgb(_value.R, Calculate(_value.G, e.Delta), _value.B));
-            else if (e.Y <= columnHeight * 3)
+            else if (e.Y <= _columnHeight * 3)
                 NewColor(Color.FromArgb(_value.R, _value.G, Calculate(_value.B, e.Delta)));
             base.OnMouseWheel(e);
         }
@@ -125,11 +115,11 @@ namespace LuzesRGB.Services.Controls
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
-            columnHeight = this.Height / 4;
+            _columnHeight = Height / 4;
         }
     }
 
-    enum ColorSelected
+    internal enum ColorSelected
     {
         Red,
         Green,

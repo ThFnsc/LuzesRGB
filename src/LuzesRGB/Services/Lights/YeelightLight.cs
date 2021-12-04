@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using YeelightAPI;
 
@@ -61,7 +58,7 @@ namespace LuzesRGB.Services.Lights
 
         public async Task SetColor(Color color)
         {
-            if(_yeelight!=null)
+            if (_yeelight != null)
                 await Task.WhenAll(_yeelight.SetRGBColor(color.R, color.G, color.B, 300), _yeelight.SetBrightness(Math.Max(color.R, Math.Max(color.G, color.B))));
             _lastColor = color;
             OnColorChanged?.Invoke(this, color);
@@ -75,9 +72,6 @@ namespace LuzesRGB.Services.Lights
                 await _yeelight.TurnOff();
         }
 
-        Task<bool> ISmartLight.Connect()
-        {
-            throw new NotImplementedException();
-        }
+        Task<bool> ISmartLight.Connect() => throw new NotImplementedException();
     }
 }

@@ -1,32 +1,29 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
-using System.Net;
-using System.Threading.Tasks;
-using Microsoft.Win32;
-using System.Threading;
-using System.Collections.Generic;
-using System.Linq;
-using LuzesRGB.Services.Lights;
+﻿using LuzesRGB.Helpers;
 using LuzesRGB.Services;
 using LuzesRGB.Services.Controls;
-using LuzesRGB.Helpers;
+using LuzesRGB.Services.Lights;
+using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace LuzesRGB
 {
     public partial class MainForm : Form
     {
-        public byte ChannelLimit { get { return Properties.Settings.Default.ChannelLimit; } set { Properties.Settings.Default.ChannelLimit = value; Properties.Settings.Default.Save(); } }
-        private bool forceClose = false;
-        private readonly bool boot = false;
-
-        bool doGraphUpdate = true;
+        public byte ChannelLimit { get => Properties.Settings.Default.ChannelLimit; set { Properties.Settings.Default.ChannelLimit = value; Properties.Settings.Default.Save(); } }
+        private bool _forceClose = false;
+        private readonly bool _boot = false;
+        private bool _doGraphUpdate = true;
         private readonly AudioToColorService _audioToColorService;
 
         public MainForm(string[] progArgs)
         {
             foreach (var arg in progArgs)
-                if (arg == "-boot") boot = true;
+                if (arg == "-boot") _boot = true;
 
             SystemEvents.SessionEnding += (sender, args) =>
             {
@@ -55,7 +52,7 @@ namespace LuzesRGB
 
         private void OnAudioData(object sender, float[] spectrum)
         {
-            if (doGraphUpdate)
+            if (_doGraphUpdate)
                 SafeCall(() =>
                 {
                     chart?.Series["Amplitudes"].Points.Clear();
@@ -89,7 +86,7 @@ namespace LuzesRGB
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (!forceClose)
+            if (!_forceClose)
             {
                 e.Cancel = true;
                 Visible = false;
@@ -100,11 +97,11 @@ namespace LuzesRGB
             _audioToColorService.Dispose();
 
         private void ChartClicked(object sender, EventArgs e) =>
-            doGraphUpdate = !doGraphUpdate;
+            _doGraphUpdate = !_doGraphUpdate;
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            if (Properties.Settings.Default.StartInvisible && boot)
+            if (Properties.Settings.Default.StartInvisible && _boot)
                 BeginInvoke(new MethodInvoker(() => Hide()));
             cbLaunchOnStartup.Checked = WindowsStartup.Get();
             cbStartInvisible.Enabled = cbLaunchOnStartup.Checked;
@@ -119,14 +116,14 @@ namespace LuzesRGB
         {
             if (e.ClickedItem == buttonExit)
             {
-                forceClose = true;
+                _forceClose = true;
                 Close();
             }
             else if (e.ClickedItem == buttonShow)
                 Visible = true;
             else if (e.ClickedItem == buttonRestart)
             {
-                forceClose = true;
+                _forceClose = true;
                 Application.Restart();
             }
         }
@@ -139,7 +136,7 @@ namespace LuzesRGB
 
         private void LaunchOnStartupCheckedChanged(object sender, EventArgs e) =>
             WindowsStartup.Set(cbStartInvisible.Enabled = cbLaunchOnStartup.Checked);
-        
+
         private void BrightnessLimitScrolled(object sender, EventArgs e) =>
             ChannelLimit = _audioToColorService.BrightnessCap = Convert.ToByte(tLimit.Value);
 

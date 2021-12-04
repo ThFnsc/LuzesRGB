@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LuzesRGB.Services.Lights
 {
     public class SmartLight
     {
-        private static readonly Dictionary<Types, Type> Mapping = new Dictionary<Types, Type>
+        private static readonly Dictionary<Types, Type> _mapping = new Dictionary<Types, Type>
             {
                 {Types.Magichome, typeof(MagicHomeLight) },
                 {Types.LegacyMagichome, typeof(MagicHomeLightLegacy) },
-                {Types.Yeelight, typeof(YeelightLight) }
+                {Types.Yeelight, typeof(YeelightLight) },
+                {Types.UDP35225, typeof(UDPLight) }
             };
 
         public string Name { get; set; }
@@ -27,7 +25,7 @@ namespace LuzesRGB.Services.Lights
 
         public ISmartLight Instantiate()
         {
-            var instance = Activator.CreateInstance(Mapping[Type]) as ISmartLight;
+            var instance = Activator.CreateInstance(_mapping[Type]) as ISmartLight;
             instance.IPAddress = IPAddress.Parse(IP);
             return instance;
         }
@@ -36,7 +34,8 @@ namespace LuzesRGB.Services.Lights
         {
             Magichome,
             Yeelight,
-            LegacyMagichome
+            LegacyMagichome,
+            UDP35225
         }
     }
 }

@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using MagicHome;
+using System;
 using System.Drawing;
-using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
-using MagicHome;
 
 namespace LuzesRGB.Services.Lights
 {
@@ -53,7 +50,7 @@ namespace LuzesRGB.Services.Lights
             }
         }
 
-        public Task Disconnect()=>
+        public Task Disconnect() =>
             Task.Run(() =>
             {
                 _light?.Dispose();
@@ -66,7 +63,7 @@ namespace LuzesRGB.Services.Lights
 
         public async Task SetColor(System.Drawing.Color color)
         {
-            if (_light!=null)
+            if (_light != null)
                 await _light.SetColorAsync(color);
             OnColorChanged?.Invoke(this, color);
             _lastColor = color;

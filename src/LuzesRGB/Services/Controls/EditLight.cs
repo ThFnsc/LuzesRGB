@@ -1,14 +1,8 @@
-﻿using Accord;
-using LuzesRGB.Services.Lights;
+﻿using LuzesRGB.Services.Lights;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace LuzesRGB.Services.Controls
@@ -38,17 +32,17 @@ namespace LuzesRGB.Services.Controls
                 if (tbIp.Text.Length == 0)
                     throw new Exception("O IP não pode estar vazio");
 
-                if (!IPAddress.TryParse(tbIp.Text, out IPAddress ipAddress))
+                if (!IPAddress.TryParse(tbIp.Text, out var ipAddress))
                     throw new Exception($"'{tbIp.Text}' não é um IP válido");
-                
+
                 SmartLight.Name = tbName.Text;
-                SmartLight.Type = (SmartLight.Types)cbType.SelectedItem;
+                SmartLight.Type = (SmartLight.Types) cbType.SelectedItem;
                 SmartLight.IP = tbIp.Text;
 
                 DialogResult = DialogResult.OK;
                 Close();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
