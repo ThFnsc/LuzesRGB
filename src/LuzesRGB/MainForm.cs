@@ -47,8 +47,11 @@ namespace LuzesRGB
             tLimit.Value = ChannelLimit;
         }
 
-        private void NewColor(object sender, Color e) =>
-            rgbView.Color = e;
+        private void NewColor(object sender, Color e)
+        {
+            if (rgbView != null)
+                rgbView.Color = e;
+        }
 
         private void OnAudioData(object sender, float[] spectrum)
         {

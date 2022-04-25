@@ -67,7 +67,7 @@ namespace LuzesRGB.Services.Lights
                 await Socket.SendAsync(
                     buffer: new ArraySegment<byte>(value, 0, value.Length),
                     socketFlags: SocketFlags.None);
-                Console.WriteLine($"[{SW.ElapsedMilliseconds}] {++Counter}x");
+                //Console.WriteLine($"[{SW.ElapsedMilliseconds}] {++Counter}x");
             }
         }
 

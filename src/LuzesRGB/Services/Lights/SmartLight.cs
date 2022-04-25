@@ -11,7 +11,8 @@ namespace LuzesRGB.Services.Lights
                 {Types.Magichome, typeof(MagicHomeLight) },
                 {Types.LegacyMagichome, typeof(MagicHomeLightLegacy) },
                 {Types.Yeelight, typeof(YeelightLight) },
-                {Types.UDP35225, typeof(UDPLight) }
+                {Types.UDP35225, typeof(UDPLight) },
+                {Types.SerialLight, typeof(SerialLight) }
             };
 
         public string Name { get; set; }
@@ -35,7 +36,8 @@ namespace LuzesRGB.Services.Lights
             Magichome,
             Yeelight,
             LegacyMagichome,
-            UDP35225
+            UDP35225,
+            SerialLight
         }
     }
 }

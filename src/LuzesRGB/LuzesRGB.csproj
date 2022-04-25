@@ -134,6 +134,7 @@
       <DependentUpon>RGBView.cs</DependentUpon>
     </Compile>
     <Compile Include="Services\Lights\MagicHomeLight.cs" />
+    <Compile Include="Services\Lights\SerialLight.cs" />
     <Compile Include="Services\Lights\SmartLight.cs" />
     <Compile Include="Helpers\WindowsStartup.cs" />
     <Compile Include="Services\Lights\UDPLight.cs" />
