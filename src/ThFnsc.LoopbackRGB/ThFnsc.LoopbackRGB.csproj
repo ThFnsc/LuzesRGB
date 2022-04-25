@@ -14,4 +14,8 @@
     <PackageReference Include="NAudio" Version="2.0.1" />
     <PackageReference Include="System.IO.Ports" Version="6.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ThFnsc.Protocols\ThFnsc.Protocols.csproj" />
+  </ItemGroup>
 </Project>
