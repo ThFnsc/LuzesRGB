@@ -9,18 +9,10 @@
 
 CRGB leds[NUM_LEDS];
 
-#define UPDATES_PER_SECOND 100
-#define MODE_SWITCH_INTERVAL 60000
-
-byte globalBrightness = 255;
-
-CRGBPalette16 currentPalette;
-TBlendType currentBlending;
 CRGB currentColor;
 unsigned long colorReceived = 0;
 unsigned long lastActivity = 0;
-int lastHeap = 2147483647;
-byte mode = 0;
+
 EscapedBinaryProtocol serial(127);
 
 void setup()
@@ -53,8 +45,6 @@ struct StripSection
     {0, 96},
     {96, 192}};
 
-byte rgbBuffer[4];
-
 byte ack[] = {1, 2, 3, 4};
 
 void loop()
@@ -67,7 +57,6 @@ void loop()
         case 3:
             currentColor = CRGB(serial.buffer[0], serial.buffer[1], serial.buffer[2]);
             colorReceived = millis();
-            mode = 1;
             break;
         case 4:
             serial.Write(ack, sizeof(ack));
@@ -88,22 +77,16 @@ void loop()
     digitalWrite(PSU_PIN, millis() - lastActivity > 10000);
 
     if (millis() - colorReceived > 5000)
-        if (mode == 1)
-            currentColor = CRGB::Black;
-        else if (mode == 2)
-            fill_solid(&leds[0], NUM_LEDS, CRGB::Black);
+        currentColor = CRGB::Black;
 
-    if (mode == 1)
+    for (int s = 0; s < SECTIONS; s++)
     {
-        for (int s = 0; s < SECTIONS; s++)
-        {
-            int half = ((sections[s].end - sections[s].start) / 2) + sections[s].start;
-            for (int i = sections[s].end - 1; i > half; i--)
-                leds[i] = leds[i - 1];
-            for (int i = sections[s].start; i < half; i++)
-                leds[i] = leds[i + 1];
-            leds[half] = currentColor;
-        }
-        FastLED.show();
+        int half = ((sections[s].end - sections[s].start) / 2) + sections[s].start;
+        for (int i = sections[s].end - 1; i > half; i--)
+            leds[i] = leds[i - 1];
+        for (int i = sections[s].start; i < half; i++)
+            leds[i] = leds[i + 1];
+        leds[half] = currentColor;
     }
+    FastLED.show();
 }
