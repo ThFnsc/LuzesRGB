@@ -3,13 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32414.248
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LuzesRGB", "src\LuzesRGB\LuzesRGB.csproj", "{F5372188-E8AA-45F5-922C-E687E00DC406}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FFA6AC09-51A8-45AE-94FF-4869DD4D1E60}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MagicHome", "src\MagicHome\MagicHome.csproj", "{CDB7CE9D-6FC0-4C0B-8E68-AD50B9F68D5A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThFnsc.LoopbackRGB", "src\ThFnsc.LoopbackRGB\ThFnsc.LoopbackRGB.csproj", "{5D1151BE-80F8-4F1E-8222-BDDDCEEED4C3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThFnsc.LoopbackRGB", "src\ThFnsc.LoopbackRGB\ThFnsc.LoopbackRGB.csproj", "{5D1151BE-80F8-4F1E-8222-BDDDCEEED4C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,14 +13,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F5372188-E8AA-45F5-922C-E687E00DC406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F5372188-E8AA-45F5-922C-E687E00DC406}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F5372188-E8AA-45F5-922C-E687E00DC406}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F5372188-E8AA-45F5-922C-E687E00DC406}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CDB7CE9D-6FC0-4C0B-8E68-AD50B9F68D5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CDB7CE9D-6FC0-4C0B-8E68-AD50B9F68D5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CDB7CE9D-6FC0-4C0B-8E68-AD50B9F68D5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CDB7CE9D-6FC0-4C0B-8E68-AD50B9F68D5A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5D1151BE-80F8-4F1E-8222-BDDDCEEED4C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5D1151BE-80F8-4F1E-8222-BDDDCEEED4C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D1151BE-80F8-4F1E-8222-BDDDCEEED4C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -34,8 +22,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{F5372188-E8AA-45F5-922C-E687E00DC406} = {FFA6AC09-51A8-45AE-94FF-4869DD4D1E60}
-		{CDB7CE9D-6FC0-4C0B-8E68-AD50B9F68D5A} = {FFA6AC09-51A8-45AE-94FF-4869DD4D1E60}
 		{5D1151BE-80F8-4F1E-8222-BDDDCEEED4C3} = {FFA6AC09-51A8-45AE-94FF-4869DD4D1E60}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
