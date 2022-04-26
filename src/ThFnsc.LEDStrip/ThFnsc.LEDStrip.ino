@@ -42,9 +42,10 @@ struct StripSection
     int start;
     int end;
     float centerOffset;
+    bool inverted;
 } sections[] = {
-    {0, 96, .57},
-    {96, 192, .57}};
+    {0, 96, .57, true},
+    {96, 192, .40, false}};
 
 byte ack[] = {1, 2, 3, 4};
 
@@ -89,8 +90,8 @@ void loop()
             leds[i] = leds[i - 1];
         for (int i = sections[s].start; i < halfLeft; i++)
             leds[i] = leds[i + 1];
-        leds[halfLeft] = currentColorRight;
-        leds[halfRight] = currentColorLeft;
+        leds[halfLeft] = sections[s].inverted ? currentColorRight : currentColorLeft;
+        leds[halfRight] = sections[s].inverted ? currentColorLeft : currentColorRight;
     }
     FastLED.show();
 }
