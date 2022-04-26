@@ -41,9 +41,10 @@ struct StripSection
 {
     int start;
     int end;
+    float centerOffset;
 } sections[] = {
-    {0, 96},
-    {96, 192}};
+    {0, 96, .57},
+    {96, 192, .57}};
 
 byte ack[] = {1, 2, 3, 4};
 
@@ -82,7 +83,7 @@ void loop()
 
     for (int s = 0; s < SECTIONS; s++)
     {
-        int halfLeft = ((sections[s].end - sections[s].start) / 2) + sections[s].start;
+        int halfLeft = ((sections[s].end - sections[s].start) * sections[s].centerOffset) + sections[s].start;
         int halfRight = halfLeft + 1;
         for (int i = sections[s].end - 1; i > halfRight; i--)
             leds[i] = leds[i - 1];

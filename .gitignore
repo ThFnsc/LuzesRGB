@@ -260,3 +260,4 @@ paket-files/
 __pycache__/
 *.pyc
 /src/ThFnsc.LEDStrip/.vscode/c_cpp_properties.json
+/src/ThFnsc.LEDStrip/output
