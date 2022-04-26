@@ -12,4 +12,16 @@ public readonly struct RGBColor
         Green = green;
         Blue = blue;
     }
+
+    public static RGBColor FromByteArray(byte[] bytes)
+    {
+        if (bytes.Length != 3)
+            throw new ArgumentException("Byte array must be of length 3");
+
+        return new RGBColor(bytes[0], bytes[1], bytes[2]);
+    }
+
+    public byte[] ToByteArray() => new byte[] { Red, Green, Blue };
+
+    public override string ToString() => $"#{Convert.ToHexString(ToByteArray())}";
 }

@@ -3,5 +3,5 @@ public interface IAudioProvider
 {
     void Start();
 
-    event EventHandler<float[]> OnSamplesAvailable;
+    event EventHandler<float[][]> OnSamplesAvailable;
 }

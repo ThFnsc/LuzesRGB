@@ -6,14 +6,14 @@ namespace ThFnsc.LoopbackRGB.Services.Devices;
 public class OffloadedColorSampleSetter
 {
     private readonly IColoreableDevice _device;
-    private readonly BlockingCollection<RGBColor> _colorQueue;
+    private readonly BlockingCollection<RGBColor[]> _colorQueue;
     private readonly ILogger _logger;
     private readonly Thread _thread;
 
     public OffloadedColorSampleSetter(IColoreableDevice device, ILogger logger)
     {
         _device = device;
-        _colorQueue = new BlockingCollection<RGBColor>(2);
+        _colorQueue = new(2);
         _logger = logger;
         _thread = new Thread(new ThreadStart(Worker))
         {
@@ -24,10 +24,10 @@ public class OffloadedColorSampleSetter
 
     private void Worker()
     {
-        foreach (var color in _colorQueue.GetConsumingEnumerable())
+        foreach (var colors in _colorQueue.GetConsumingEnumerable())
             try
             {
-                _device.SetColor(color);
+                _device.SetColors(colors);
             }
             catch (Exception e)
             {
@@ -35,5 +35,6 @@ public class OffloadedColorSampleSetter
             }
     }
 
-    public bool TrySetColor(RGBColor color) => _colorQueue.TryAdd(color);
+    public bool TrySetColors(RGBColor[] colors) =>
+        _colorQueue.TryAdd(colors);
 }

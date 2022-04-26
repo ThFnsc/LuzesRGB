@@ -9,7 +9,7 @@
 
 CRGB leds[NUM_LEDS];
 
-CRGB currentColor;
+CRGB currentColorLeft, currentColorRight;
 unsigned long colorReceived = 0;
 unsigned long lastActivity = 0;
 
@@ -54,8 +54,9 @@ void loop()
     {
         switch (read)
         {
-        case 3:
-            currentColor = CRGB(serial.buffer[0], serial.buffer[1], serial.buffer[2]);
+        case 6:
+            currentColorLeft = CRGB(serial.buffer[0], serial.buffer[1], serial.buffer[2]);
+            currentColorRight = CRGB(serial.buffer[3], serial.buffer[4], serial.buffer[5]);
             colorReceived = millis();
             break;
         case 4:
@@ -77,16 +78,18 @@ void loop()
     digitalWrite(PSU_PIN, millis() - lastActivity > 10000);
 
     if (millis() - colorReceived > 5000)
-        currentColor = CRGB::Black;
+        currentColorLeft = currentColorRight = CRGB::Black;
 
     for (int s = 0; s < SECTIONS; s++)
     {
-        int half = ((sections[s].end - sections[s].start) / 2) + sections[s].start;
-        for (int i = sections[s].end - 1; i > half; i--)
+        int halfLeft = ((sections[s].end - sections[s].start) / 2) + sections[s].start;
+        int halfRight = halfLeft + 1;
+        for (int i = sections[s].end - 1; i > halfRight; i--)
             leds[i] = leds[i - 1];
-        for (int i = sections[s].start; i < half; i++)
+        for (int i = sections[s].start; i < halfLeft; i++)
             leds[i] = leds[i + 1];
-        leds[half] = currentColor;
+        leds[halfLeft] = currentColorRight;
+        leds[halfRight] = currentColorLeft;
     }
     FastLED.show();
 }

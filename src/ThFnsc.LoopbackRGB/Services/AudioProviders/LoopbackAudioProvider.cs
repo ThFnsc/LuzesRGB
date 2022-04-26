@@ -7,8 +7,9 @@ public class NAudioLoopbackAudioProvider : IAudioProvider, IDisposable
 {
     private static readonly TimeSpan _maxSilenceDuration = TimeSpan.FromSeconds(5);
     private const int _sampleSize = 1 << 11;
+    private const int _channels = 2;
 
-    private readonly float[] _samples = new float[_sampleSize];
+    private readonly float[][] _samples = Enumerable.Range(0, _channels).Select(_ => new float[_sampleSize]).ToArray();
     private readonly ILogger<NAudioLoopbackAudioProvider> _logger;
     private byte[]? _buffer;
     private readonly Stopwatch _silenceStopwatch = Stopwatch.StartNew();
@@ -17,7 +18,7 @@ public class NAudioLoopbackAudioProvider : IAudioProvider, IDisposable
     private WasapiLoopbackCapture? _audio;
     private BufferedWaveProvider? _bwp;
 
-    public event EventHandler<float[]>? OnSamplesAvailable;
+    public event EventHandler<float[][]>? OnSamplesAvailable;
 
     public NAudioLoopbackAudioProvider(ILogger<NAudioLoopbackAudioProvider> logger)
     {
@@ -53,11 +54,8 @@ public class NAudioLoopbackAudioProvider : IAudioProvider, IDisposable
                 if (somethingPlaying)
                     _silenceStopwatch.Restart();
                 for (int i = 0, offset = 0; i < _sampleSize; i++, offset += _audio.WaveFormat.BlockAlign)
-                {
-                    var left = BitConverter.ToSingle(_buffer, offset);
-                    var right = BitConverter.ToSingle(_buffer, offset + sizeof(float));
-                    _samples[i] = (left + right) / 2;
-                }
+                    for (var j = 0; j < _channels; j++)
+                        _samples[j][i] = BitConverter.ToSingle(_buffer, offset + sizeof(float) * j);
                 OnSamplesAvailable?.Invoke(this, _samples);
             }
         };

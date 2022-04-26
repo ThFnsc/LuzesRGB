@@ -3,5 +3,5 @@
 namespace ThFnsc.LoopbackRGB.Services.Devices;
 public interface IColoreableDevice
 {
-    void SetColor(RGBColor color);
+    void SetColors(RGBColor[] colors);
 }

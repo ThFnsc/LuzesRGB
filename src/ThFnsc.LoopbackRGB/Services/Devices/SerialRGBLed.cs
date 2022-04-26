@@ -5,10 +5,10 @@ namespace ThFnsc.LoopbackRGB.Services.Devices;
 
 public class SerialRGBLed : IColoreableDevice, IDisposable
 {
+    private int _lastColorAmount = 0;
     private bool _disposed = false;
     private SerialPort _serial;
     private readonly ILogger<SerialRGBLed> _logger;
-    private readonly byte[] _colorPayload = new byte[3];
     private static readonly byte[] _ack = new byte[] { 1, 2, 3, 4 };
     
     public SerialRGBLed(ILogger<SerialRGBLed> logger)
@@ -75,14 +75,13 @@ public class SerialRGBLed : IColoreableDevice, IDisposable
         }
     }
 
-    public void SetColor(RGBColor color)
+    public void SetColors(RGBColor[] colors)
     {
         if (!_serial.IsOpen)
             throw new InvalidOperationException("Color cannot be set. Serial device unavailable");
-        _colorPayload[0] = color.Red;
-        _colorPayload[1] = color.Green;
-        _colorPayload[2] = color.Blue;
-        var converted = EscapedBinaryProtocol.Write(_colorPayload);
+        _lastColorAmount = colors.Length;
+        var colorBytes = colors.SelectMany(c => c.ToByteArray()).ToArray();
+        var converted = EscapedBinaryProtocol.Write(colorBytes);
         _serial.Write(converted, 0, converted.Length);
     }
 
@@ -94,7 +93,7 @@ public class SerialRGBLed : IColoreableDevice, IDisposable
         {
             if (_serial.IsOpen)
             {
-                SetColor(new(0, 0, 0));
+                SetColors(Enumerable.Range(0, _lastColorAmount).Select(_ => new RGBColor(0, 0, 0)).ToArray());
                 _serial.Close();
             }
             _serial.Dispose();
